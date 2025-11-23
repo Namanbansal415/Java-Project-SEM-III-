@@ -1,4 +1,5 @@
 package com.onlinejobportal;
+
 import com.onlinejobportal.ui.LoginFrame;
 
 public class Main {
