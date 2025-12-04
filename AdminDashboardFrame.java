@@ -1,10 +1,10 @@
+
 package com.onlinejobportal.ui;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
-
 import com.onlinejobportal.util.DBUtil;
 
 public class AdminDashboardFrame extends JFrame {
@@ -14,32 +14,82 @@ public class AdminDashboardFrame extends JFrame {
 
     public AdminDashboardFrame() {
         setTitle("Admin Dashboard");
-        setSize(1000, 600);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        setLayout(new BorderLayout());
+        initUI();
+    }
 
-        JLabel title = new JLabel("Admin Dashboard", SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        title.setForeground(new Color(0, 50, 100));
-        add(title, BorderLayout.NORTH);
+    private void initUI() {
 
+        // ===============================
+        // GRADIENT BACKGROUND
+        // ===============================
+        JPanel bgPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+
+                GradientPaint gp = new GradientPaint(
+                        0, 0, new Color(0, 90, 160),
+                        0, getHeight(), new Color(0, 60, 120)
+                );
+
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+
+        bgPanel.setLayout(new GridBagLayout());
+
+
+        // ===============================
+        // WHITE CARD PANEL
+        // ===============================
+        JPanel card = new JPanel();
+        card.setPreferredSize(new Dimension(780, 500));
+        card.setBackground(Color.WHITE);
+        card.setLayout(new BorderLayout());
+        card.setBorder(BorderFactory.createLineBorder(new Color(0, 70, 140), 3));
+
+
+        // ===============================
+        // TITLE
+        // ===============================
+        JLabel lblTitle = new JLabel("Admin Dashboard", SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        lblTitle.setForeground(new Color(0, 60, 120));
+        lblTitle.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+        card.add(lblTitle, BorderLayout.NORTH);
+
+
+        // ===============================
+        // TABS
+        // ===============================
         JTabbedPane tabs = new JTabbedPane();
-        tabs.add("User Management", userPanel());
-        tabs.add("Job Approvals", jobPanel());
-        tabs.add("System Settings", settingsPanel());
+        tabs.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
-        add(tabs, BorderLayout.CENTER);
+        tabs.addTab("User Management", createUserPanel());
+        tabs.addTab("Job Approvals", createJobPanel());
+        tabs.addTab("System Settings", createSettingsPanel());
+
+        card.add(tabs, BorderLayout.CENTER);
+
+
+        // ADD CARD TO CENTER
+        bgPanel.add(card);
+        add(bgPanel);
 
         loadUsers();
         loadPendingJobs();
     }
 
-    // ============================
-    //  USER MANAGEMENT PANEL
-    // ============================
-    private JPanel userPanel() {
+    // ===============================
+    // USER MANAGEMENT PANEL
+    // ===============================
+    private JPanel createUserPanel() {
         JPanel p = new JPanel(new BorderLayout());
 
         userModel = new DefaultTableModel(new String[]{
@@ -48,15 +98,13 @@ public class AdminDashboardFrame extends JFrame {
 
         userTable = new JTable(userModel);
         userTable.setRowHeight(28);
-
-        JScrollPane scroll = new JScrollPane(userTable);
-        p.add(scroll, BorderLayout.CENTER);
+        p.add(new JScrollPane(userTable), BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel();
 
-        JButton btnDelete = new JButton("Delete User");
-        JButton btnRole = new JButton("Change Role");
-        JButton btnRefresh = new JButton("Refresh");
+        JButton btnDelete = createButton("Delete User", new Color(231, 76, 60));
+        JButton btnRole = createButton("Change Role", new Color(52, 152, 219));
+        JButton btnRefresh = createButton("Refresh", new Color(46, 204, 113));
 
         btnPanel.add(btnDelete);
         btnPanel.add(btnRole);
@@ -71,7 +119,6 @@ public class AdminDashboardFrame extends JFrame {
         return p;
     }
 
-    // Load users from database
     private void loadUsers() {
         try {
             userModel.setRowCount(0);
@@ -126,10 +173,10 @@ public class AdminDashboardFrame extends JFrame {
         }
 
         int id = (int) userModel.getValueAt(row, 0);
-        String newRole = JOptionPane.showInputDialog(this,
+        String newRole = JOptionPane.showInputDialog(this, 
                 "Enter new role (admin/employer/candidate):");
 
-        if (newRole == null || newRole.isEmpty()) return;
+        if (newRole == null || newRole.trim().isEmpty()) return;
 
         try {
             Connection con = DBUtil.getConnection();
@@ -146,10 +193,10 @@ public class AdminDashboardFrame extends JFrame {
         }
     }
 
-    // ============================
-    //  JOB APPROVAL PANEL
-    // ============================
-    private JPanel jobPanel() {
+    // ===============================
+    // JOB APPROVAL PANEL
+    // ===============================
+    private JPanel createJobPanel() {
         JPanel p = new JPanel(new BorderLayout());
 
         jobModel = new DefaultTableModel(new String[]{
@@ -159,14 +206,13 @@ public class AdminDashboardFrame extends JFrame {
         jobTable = new JTable(jobModel);
         jobTable.setRowHeight(28);
 
-        JScrollPane scroll = new JScrollPane(jobTable);
-        p.add(scroll, BorderLayout.CENTER);
+        p.add(new JScrollPane(jobTable), BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel();
 
-        JButton btnApprove = new JButton("Approve");
-        JButton btnReject = new JButton("Reject");
-        JButton btnRefresh = new JButton("Refresh");
+        JButton btnApprove = createButton("Approve", new Color(39, 174, 96));
+        JButton btnReject = createButton("Reject", new Color(192, 57, 43));
+        JButton btnRefresh = createButton("Refresh", new Color(52, 152, 219));
 
         btnPanel.add(btnApprove);
         btnPanel.add(btnReject);
@@ -246,19 +292,36 @@ public class AdminDashboardFrame extends JFrame {
             ps.executeUpdate();
 
             loadPendingJobs();
-            JOptionPane.showMessageDialog(this, "Job Rejected & Deleted!");
+            JOptionPane.showMessageDialog(this, "Job Rejected!");
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // ============================
-    //  SETTINGS PANEL
-    // ============================
-    private JPanel settingsPanel() {
+    // ===============================
+    // SETTINGS PANEL
+    // ===============================
+    private JPanel createSettingsPanel() {
         JPanel p = new JPanel();
-        p.add(new JLabel("System settings will come here."));
+        JLabel label = new JLabel("System Settings Coming Soon...");
+        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        label.setForeground(new Color(80, 80, 80));
+        p.add(label);
         return p;
+    }
+
+    // ===============================
+    // BUTTON STYLING
+    // ===============================
+    private JButton createButton(String text, Color bg) {
+        JButton btn = new JButton(text);
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder());
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return btn;
     }
 }
